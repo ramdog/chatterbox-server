@@ -6,19 +6,19 @@
  * *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html. */
 
 exports.handler = function(request, response) {
+  var parseURL = require('url').parse;
   /* the 'request' argument comes from nodes http module. It includes info about the
   request - such as what URL the browser is requesting. */
 
   /* Documentation for both request and response can be found at
    * http://nodemanual.org/0.8.14/nodejs_ref_guide/http.html */
-
   console.log("Serving request type " + request.method + " for url " + request.url);
 
   /* Without this line, this server wouldn't work. See the note
    * below about CORS. */
   var statusCode = 200;
   var headers = defaultCorsHeaders;
-  headers['Content-Type'] = "text/plain";
+  headers['Content-Type'] = "application/json";
 
   var data = '';
   // request.setEncoding('utf8');
@@ -31,15 +31,21 @@ exports.handler = function(request, response) {
     var body = 'Hello, World';
     // if (request.url !== '/classes/messages') {
       // statusCode = 404;
-    if (request.method === 'POST') {
-      storage.results.push(JSON.parse(data));
-      console.log(storage.results);
-      body = JSON.stringify(storage);
-      statusCode = 201;
-    } else if (request.method === 'GET') {
-      statusCode = 200;
-      body = JSON.stringify(storage);
+    var basePath = request.url.split('/')[1];
+    if (basePath !== 'classes') {
+      statusCode = 404;
+    } else {
+      if (request.method === 'POST') {
+        storage.results.push(JSON.parse(data));
+        console.log(storage.results);
+        body = JSON.stringify(storage);
+        statusCode = 201;
+      } else if (request.method === 'GET') {
+        statusCode = 200;
+        body = JSON.stringify(storage);
+      }
     }
+
     response.writeHead(statusCode, headers);
     response.end(body);
   });
